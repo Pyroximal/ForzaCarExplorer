@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FH6 Car Explorer</title>
+<meta name="description" content="Every car in Forza Horizon 6 — filter by year, make, class, specs and rarity.">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FH6 Cars">
+<meta property="og:title" content="FH6 Car Explorer">
+<meta property="og:description" content="Every car in Forza Horizon 6 — filter by year, make, class, specs and rarity.">
+<meta property="og:type" content="website">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#results">Skip to results</a>
+
+<header class="topbar">
+  <button class="icon-btn mobile-only" id="filtersToggle" aria-label="Open filters" aria-expanded="false" aria-controls="sidebar">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+
+  <a class="brand" href="./" aria-label="FH6 Car Explorer — home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><path d="M3 20.5 6.2 13a3.4 3.4 0 0 1 3-2h13.6a3.4 3.4 0 0 1 3 2L29 20.5V25a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1.5H7V25a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.4 20.6h15.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="21.6" r="1.6" fill="currentColor"/><circle cx="23" cy="21.6" r="1.6" fill="currentColor"/></svg>
+    </span>
+    <span class="brand-text">
+      <strong>FH6</strong>
+      <span>Car Explorer</span>
+    </span>
+  </a>
+
+  <div class="searchbox" id="searchbox">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <input id="search" type="search" placeholder="Search cars…" autocomplete="off" spellcheck="false" aria-label="Search cars">
+    <kbd class="mobile-hidden" id="searchHint">/</kbd>
+    <button class="search-clear" id="searchClear" aria-label="Clear search" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="topbar-actions">
+    <button class="icon-btn" id="refreshBtn" aria-label="Refresh data" title="Refresh data from Google Sheets">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <a class="icon-btn desktop-only" id="sheetLink" href="#" target="_blank" rel="noopener" aria-label="Open the Google Sheet" title="Open the Google Sheet">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9l5 5v11H5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11h6M9 15h6M9 8h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </a>
+    <button class="btn btn-ghost icon-only-label desktop-only" id="shareBtn" title="Copy a link to this filtered view">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Share</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Filters">
+    <div class="sidebar-head">
+      <h2>Filters <span class="count-pill" id="activeCount" hidden>0</span></h2>
+      <button class="linkbtn" id="resetBtn">Reset all</button>
+    </div>
+
+    <div class="filters" id="filterList">
+      <div class="filters-loading" aria-hidden="true">
+        <div class="skel skel-title"></div><div class="skel skel-block"></div>
+        <div class="skel skel-title"></div><div class="skel skel-block"></div>
+        <div class="skel skel-title"></div><div class="skel skel-block"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-foot mobile-only">
+      <button class="btn btn-primary" id="showResults">Show <span id="drawerCount">0</span> cars</button>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main" id="results">
+    <section class="hero" aria-label="Data summary">
+      <div class="hero-main">
+        <p class="eyebrow">
+          <span class="dot"></span>
+          <span id="sourceLabel">Forza Horizon 6 · car database</span>
+        </p>
+        <h1><span id="resultCount">—</span> <span class="hero-unit" id="resultUnit">cars</span></h1>
+        <p class="hero-sub" id="resultSub">Loading the garage…</p>
+      </div>
+      <div class="hero-side">
+        <div class="hero-stat">
+          <span class="hero-stat-label">Makes</span>
+          <span class="hero-stat-value" id="statMakes">—</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-label">Model years</span>
+          <span class="hero-stat-value" id="statYears">—</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-label">Garage value</span>
+          <span class="hero-stat-value" id="statValue">—</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="results-bar">
+      <div class="results-bar-left">
+        <p class="result-note" id="updatedNote">Connecting to Google Sheets…</p>
+      </div>
+      <div class="results-bar-right">
+        <label class="select-wrap">
+          <span class="visually-hidden">Sort by</span>
+          <select id="sortSelect" aria-label="Sort cars">
+            <option value="make:asc">Make A–Z</option>
+            <option value="year:desc">Year, newest first</option>
+            <option value="year:asc">Year, oldest first</option>
+            <option value="pi:desc">Performance index, high–low</option>
+            <option value="power:desc">Power, high–low</option>
+            <option value="weight:asc">Weight, light–heavy</option>
+            <option value="value:desc">Value, high–low</option>
+            <option value="value:asc">Value, low–high</option>
+            <option value="rarity:desc">Rarity, rarest first</option>
+            <option value="model:asc">Model A–Z</option>
+          </select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </label>
+        <button class="btn btn-ghost" id="exportBtn" title="Download the filtered list as CSV">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0 4.5-4.5M12 16l-4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="desktop-only">Export</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="chips" id="chips" hidden></div>
+
+    <div class="error-panel" id="errorPanel" hidden>
+      <div class="error-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 8v5m0 3.5v.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Couldn’t load the sheet</h2>
+      <p id="errorMessage">The data request failed.</p>
+      <ul class="error-help">
+        <li>In Google Sheets, use <strong>Share → Anyone with the link → Viewer</strong>.</li>
+        <li>If you opened this file directly from disk, serve it over HTTP instead — browsers block some <code>file://</code> requests.</li>
+      </ul>
+      <button class="btn btn-primary" id="retryBtn">Try again</button>
+    </div>
+
+    <div class="table-wrap" id="tableWrap" hidden>
+      <table class="cars-table" id="carsTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="cards" id="cards" hidden></div>
+
+    <div class="empty" id="empty" hidden>
+      <div class="empty-mark" aria-hidden="true">🚗</div>
+      <h2>No cars match those filters</h2>
+      <p>Try widening the year range or clearing a filter or two.</p>
+      <button class="btn btn-primary" id="emptyReset">Clear all filters</button>
+    </div>
+
+    <div class="table-skeleton" id="skeleton" aria-hidden="true">
+      <div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div>
+      <div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div>
+      <div class="skel skel-row"></div><div class="skel skel-row"></div>
+    </div>
+
+    <footer class="page-foot">
+      <p>
+        Data lives in a Google Sheet and refreshes on every load.
+        <a id="footSheetLink" href="#" target="_blank" rel="noopener">Open the source sheet</a>.
+      </p>
+      <p class="foot-meta">Unofficial fan project. Forza Horizon is a trademark of Microsoft. Not affiliated with Turn 10 or Playground Games.</p>
+    </footer>
+  </main>
+</div>
+
+<dialog class="detail" id="detail">
+  <div class="detail-head">
+    <div>
+      <p class="detail-eyebrow" id="detailEyebrow"></p>
+      <h2 id="detailTitle"></h2>
+    </div>
+    <button class="icon-btn" id="detailClose" aria-label="Close details">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="detail-badges" id="detailBadges"></div>
+  <dl class="detail-grid" id="detailGrid"></dl>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<noscript>
+  <div class="noscript">This app needs JavaScript to read the Google Sheet.</div>
+</noscript>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
